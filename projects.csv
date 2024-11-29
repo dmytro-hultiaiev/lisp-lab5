@@ -1,0 +1,5 @@
+id,name,model
+1,NeuroVision,NeuroFluxNet
+2,SynthAI,NeuroFluxNet
+3,EchoBrain,EchoGPT
+4,QuantumNet,EchoGPT
