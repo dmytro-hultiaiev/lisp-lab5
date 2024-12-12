@@ -40,9 +40,6 @@
 ## Лістинг реалізації завдання
 ```lisp
 ;; 1 та 2 завдання
-(defvar *table1* (make-hash-table :test #'equal))
-(defvar *table2* (make-hash-table :test #'equal))
-
 (defun read-csv-to-hash-table (file-path hash-table key)
   (with-open-file (stream file-path :direction :input)
 
@@ -79,10 +76,7 @@
 (defun select (file-path key &rest filters)
   (lambda (&rest filters)
     (let ((result '())
-          (hash-table (case key
-                        (:projects *table1*)
-                        (:models *table2*)
-                        (otherwise (error "Unknown key ~A" key)))))
+          (hash-table (make-hash-table :test #'equal)))
 
       (read-csv-to-hash-table file-path hash-table key)
 
@@ -100,9 +94,7 @@
                           (matches t))
                       (maphash (lambda (filter-key filter-value)
                                   (let ((nested-value (gethash filter-key nested-hash)))
-                                    (when (and nested-value
-                                              (not (string= (write-to-string filter-value)
-                                                            (write-to-string nested-value))))
+                                    (when (not (equal filter-value nested-value))
                                       (setf matches nil))))
                                 filter-hash)
                       (when matches
@@ -149,54 +141,6 @@
       (let ((values (mapcar (lambda (key) (gethash key table)) fields)))
         (format t "~{~20A~}" values)
         (format t "~%")))))
-
-
-
-;; Тести
-(defun test-read-filter-data ()
-    (format t "~%All data from projects.csv:~%")
-    (print-hash-tables (funcall (select "projects.csv" :projects)))
-
-    (format t "~%All data from models.csv:~%")
-    (print-hash-tables (funcall (select "models.csv" :models)))
-
-    (format t "~%Projects with EchoGPT model:~%")
-    (print-hash-tables (funcall (select "projects.csv" :projects) :model "EchoGPT"))
-
-    (format t "~%Projects with SynthAI name:~%")
-    (print-hash-tables (funcall (select "projects.csv" :projects) :name "SynthAI"))
-
-    (format t "~%Models with id 1:~%")
-    (print-hash-tables (funcall (select "projects.csv" :models) :id 1))
-)
-
-(defun test-write-structure-to-csv ()
-    (format t "~%Let's output the test data to write to the table:")
-    (print-hash-tables (funcall (select "projects.csv" :projects) :model "EchoGPT"))
-    
-    (write-csv-from-hash-tables "output.csv" (funcall (select "projects.csv" :projects) :model "EchoGPT"))
-    
-    (with-open-file (stream "output.csv" :direction :input)
-      (format t "~%Contents of output.csv~%")
-      (loop for line = (read-line stream nil)
-            while line
-            do (format t "~a~%" line))))
-
-(defun test-hash-table-to-to-alist ()
-  (let* ((hash-table (make-hash-table :test 'equal))
-         (expected-alist '((:id . 1)
-                           (:name . "NeuroVision")
-                           (:model . "NeuroFluxNet"))))
-
-    (setf (gethash :id hash-table) 1)
-    (setf (gethash :name hash-table) "NeuroVision")
-    (setf (gethash :model hash-table) "NeuroFluxNet")
-
-    (let ((generated-alist (hash-table-to-alist hash-table)))
-      (if (equal expected-alist generated-alist)
-          (format t "The result is correct ~a~%" generated-alist)
-          (format t "The result is not correct")))))
-
 ```
 ### Тестові набори та утиліти
 ```lisp
