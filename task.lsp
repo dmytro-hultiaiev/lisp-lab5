@@ -1,7 +1,4 @@
 ;; 1 та 2 завдання
-(defvar *table1* (make-hash-table :test #'equal))
-(defvar *table2* (make-hash-table :test #'equal))
-
 (defun read-csv-to-hash-table (file-path hash-table key)
   (with-open-file (stream file-path :direction :input)
 
@@ -38,10 +35,7 @@
 (defun select (file-path key &rest filters)
   (lambda (&rest filters)
     (let ((result '())
-          (hash-table (case key
-                        (:projects *table1*)
-                        (:models *table2*)
-                        (otherwise (error "Unknown key ~A" key)))))
+          (hash-table (make-hash-table :test #'equal)))
 
       (read-csv-to-hash-table file-path hash-table key)
 
@@ -59,9 +53,7 @@
                           (matches t))
                       (maphash (lambda (filter-key filter-value)
                                   (let ((nested-value (gethash filter-key nested-hash)))
-                                    (when (and nested-value
-                                              (not (string= (write-to-string filter-value)
-                                                            (write-to-string nested-value))))
+                                    (when (not (equal filter-value nested-value))
                                       (setf matches nil))))
                                 filter-hash)
                       (when matches
